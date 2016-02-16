@@ -55,9 +55,24 @@ function update-windowtitle() {
         set-windowtitle $Matches[1]
     }
 }
-new-alias -Name swt -Value set-windowtitle
+
+function tee-filter {
+    [CmdletBinding()] 
+    param([Parameter(ValueFromPipeline=$true)]$item, [ScriptBlock] $Filter, $filePath, [switch][bool] $append)
+    process {
+        $null = $_ | ? $filter | tee-object -filePath $filePath -Append:$append 
+        $_
+    }
+}
+
+function killall ($name) {
+    cmd /C taskkill /IM "$name.exe" /F
+    cmd /C taskkill /IM "$name" /F
+}
+
 new-alias tp test-path
 new-alias gitr git-each
 new-alias x1b write-controlchar
+new-alias swt set-windowtitle
 
 Export-ModuleMember -Function * -Cmdlet * -Alias *
