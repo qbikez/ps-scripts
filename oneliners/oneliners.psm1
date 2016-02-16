@@ -46,6 +46,16 @@ function write-controlchar($c) {
     Write-Output  ([char](0x1b) + "[$c;m")
 }
 
+
+function set-windowtitle([string] $title) {
+    $host.ui.RawUI.WindowTitle = $title
+}
+function update-windowtitle() {
+    if ("$PWD" -match "\\([^\\]*).hg") {
+        set-windowtitle $Matches[1]
+    }
+}
+new-alias -Name swt -Value set-windowtitle
 new-alias tp test-path
 new-alias gitr git-each
 new-alias x1b write-controlchar
