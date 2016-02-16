@@ -1,9 +1,9 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param() 
+param($srcDir = ".", [switch][bool] $importonly) 
 
 function install-modulelink($modulename) {
     $path = "C:\Program Files\WindowsPowershell\Modules\$modulename"
-    $target = "$PSScriptRoot\..\src\$modulename"
+    $target = "$PSScriptRoot\..\$srcDir\$modulename"
     $target = (get-item $target).FullName
 
     if (test-path $path) {
@@ -15,6 +15,19 @@ function install-modulelink($modulename) {
     cmd /C "mklink /J ""$path"" ""$target"""
 }
 
-$root = $psscriptroot
-$modules = get-childitem "$root\..\src" -filter "*.psm1" -recurse | % { $_.Directory.Name }
-$modules | % { install-modulelink $_ }
+if (!$importonly) {
+    $wid=[System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $prp=new-object System.Security.Principal.WindowsPrincipal($wid)
+    $adm=[System.Security.Principal.WindowsBuiltInRole]::Administrator
+    $IsAdmin=$prp.IsInRole($adm)
+    
+    if ($IsAdmin) {    
+        $root = $psscriptroot
+        $modules = get-childitem "$root\..\$srcDir" -filter "*.psm1" -recurse | % { $_.Directory.Name }
+        $modules | % { install-modulelink $_ }
+    } else {
+        Invoke-Elevated .\install.ps1 @PSBoundParameters
+    }
+    
+     
+}
