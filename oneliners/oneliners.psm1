@@ -146,6 +146,13 @@ function test-any() {
     end { $ok -and $seen }
 } 
 
+function get-dotnetversions() {
+    $def = get-content "$psscriptroot\dotnetver.cs" | out-string
+    add-type -TypeDefinition $def
+
+    return [DotNetVer]::GetVersionFromRegistry()
+}
+
 new-alias tp test-path
 new-alias git-each invoke-giteach
 new-alias gitr git-each
