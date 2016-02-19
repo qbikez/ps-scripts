@@ -19,7 +19,9 @@ function install-modulelink {
             # packagemanagement module may be locking some files in existing module dir
             if (gmo powershellget) { rmo powershellget }
             if (gmo packagemanagement) { rmo packagemanagement }
-            remove-item -Recurse $path
+            remove-item -Recurse $path -force
+            # in case of mklink junction, first we remove junction, then we have to remove remaining empty dir
+            if (test-path $path) { remove-item -Recurse $path }
         }
     }
     write-host "executing mklink /J $path $target"
