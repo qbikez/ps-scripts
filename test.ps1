@@ -3,6 +3,11 @@ param ($path = ".")
 import-module pester 
 
 $artifacts = "$path\artifacts"
+
+if (!(test-path $artifacts)) { $null = new-item -type directory $artifacts }
+
+write-host "running tests. artifacts dir = $((gi $artifacts).FullName)"
+
 if (!(Test-Path $artifacts)) {
     $null = new-item $artifacts -ItemType directory
 }
