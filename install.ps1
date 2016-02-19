@@ -1,5 +1,5 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($srcDir = ".", [switch][bool] $importonly) 
+param($srcDir = $null, [switch][bool] $importonly) 
 
 function install-modulelink {
     [CmdletBinding(SupportsShouldProcess=$true)]
@@ -19,7 +19,8 @@ function install-modulelink {
             # packagemanagement module may be locking some files in existing module dir
             if (gmo powershellget) { rmo powershellget }
             if (gmo packagemanagement) { rmo packagemanagement }
-            remove-item -Recurse $path
+            remove-item -Recurse $path -Force
+            remove-item -Recurse $path 
         }
     }
     write-host "executing mklink /J $path $target"
@@ -27,6 +28,10 @@ function install-modulelink {
 }
 
 if (!$importonly) {
+    if ($srcDir -eq $null) {
+        $srcDir = "$psscriptroot\..\.."
+    }
+
     $wid=[System.Security.Principal.WindowsIdentity]::GetCurrent()
     $prp=new-object System.Security.Principal.WindowsPrincipal($wid)
     $adm=[System.Security.Principal.WindowsBuiltInRole]::Administrator
@@ -34,10 +39,10 @@ if (!$importonly) {
     
     if ($IsAdmin) {    
         $root = $psscriptroot
-        $modules = get-childitem "$root\..\$srcDir" -filter "*.psm1" -recurse | % { $_.Directory.FullName }
+        $modules = get-childitem "$srcDir" -filter "*.psm1" -recurse | % { $_.Directory.FullName }
         $modules | % { install-modulelink $_ }
     } else {
-        Invoke-Elevated .\install.ps1 @PSBoundParameters
+        Invoke-Elevated $psscriptroot\install.ps1 @PSBoundParameters
     }
     
      

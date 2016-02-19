@@ -1,3 +1,4 @@
+[CmdletBinding()]
 param ($path = ".")
 
 . $psscriptroot\imports\get-envinfo.ps1
@@ -17,4 +18,9 @@ if ($e.commands["Install-Module"] -eq $null) {
 }
 
 Get-PSRepository
+
+install-packageprovider -Name NuGet -Force -MinimumVersion 2.8.5.201 -verbose
+
+#Install-NuGetClientBinaries -force -CallerPSCmdlet $PSCmdlet
+
 Set-PSRepository -name PSGallery -InstallationPolicy Trusted -verbose
