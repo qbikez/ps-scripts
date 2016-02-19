@@ -20,7 +20,13 @@ param($modulepath, [switch][bool]$newversion)
     }
     set-moduleversion $modulepath -version $newver
 
-
+    import-module PowerShellGet
+    import-module PackageManagement
+    
+    if (!Get-PSRepository $repo) {
+        Register-PSRepository -Name $repo -SourceLocation $repo/nuget -PublishLocation $repo -InstallationPolicy Trusted
+    } 
+    
     Publish-Module -Path $modulepath -Repository $repo -Verbose -NuGetApiKey $key
 
 }
