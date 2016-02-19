@@ -23,11 +23,12 @@ param($modulepath, [switch][bool]$newversion)
     import-module PowerShellGet
     import-module PackageManagement
     
-    if (!Get-PSRepository $repo) {
-        Register-PSRepository -Name $repo -SourceLocation $repo/nuget -PublishLocation $repo -InstallationPolicy Trusted
+    if (!(Get-PSRepository $repo -ErrorAction Continue)) {
+        write-host "registering PSRepository $repo"
+        Register-PSRepository -Name $repo -SourceLocation $repo/nuget -PublishLocation $repo -InstallationPolicy Trusted -Verbose
     } 
-    
-    Publish-Module -Path $modulepath -Repository $repo -Verbose -NuGetApiKey $key
+    write-host "publishing module $modulepath v$newver to repo $repo"
+    Publish-Module -Path $modulepath -Repository $repo  -NuGetApiKey $key -Verbose
 
 }
 
