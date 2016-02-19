@@ -18,7 +18,9 @@ if (test-path "$artifacts\test-result.xml") {
     remove-item "$artifacts\test-result.xml"
 }
 
-$testResultCode = & "$PSScriptRoot\test.ps1" $path
+write-host "running appveyor test script. artifacts dir = $((gi $artifacts).FullName)"
+
+$testResultCode = & "$PSScriptRoot\test.ps1" (gi $path).FullName
 
 if (!(test-path "$artifacts\test-result.xml")) {
     throw "test results not found at $artifacts\test-result.xml!"
