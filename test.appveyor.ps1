@@ -14,31 +14,42 @@ function ExitWithCode
 $artifacts = "$path\artifacts"
 
 try {
-if (test-path "$artifacts\test-result.xml") {
-    remove-item "$artifacts\test-result.xml"
-}
+    if (!(test-path $artifacts)) { $null = new-item -type directory $artifacts }
+    if (test-path "$artifacts\test-result.xml") {
+        remove-item "$artifacts\test-result.xml"
+    }
 
-$testResultCode = & "$PSScriptRoot\test.ps1" $path
+write-host "running appveyor test script. artifacts dir = $((gi $artifacts).FullName)"
+
+$testResultCode = & "$PSScriptRoot\test.ps1" (gi $path).FullName
 
 if (!(test-path "$artifacts\test-result.xml")) {
     throw "test results not found at $artifacts\test-result.xml!"
 }
 
+if (!(test-path "$artifacts\test-result.xml")) {
+        throw "test artifacts not found at '$artifacts\test-result.xml'!"
+}
+    
+
 $content = get-content "$artifacts\test-result.xml" | out-string
 if ([string]::isnullorwhitespace($content)) {
     throw "$artifacts\test-result.xml is empty!"
 }
+else {
+    $content     
+}
 
 $url = "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)"
 #$url = https://ci.appveyor.com/api/testresults/nunit/bq558ckwevwb47qb
-write-host "uploading test result to $url"
 # upload results to AppVeyor
+write-host "uploading test result from $("$artifacts\test-result.xml")  to $url"
 $wc = New-Object 'System.Net.WebClient'
 
 try {
     $r = $wc.UploadFile($url, ("$artifacts\test-result.xml"))
     
-write-host "upload done. result = $r"
+    write-host "upload done. result = $r"
 } 
 finally {
     $wc.Dispose()

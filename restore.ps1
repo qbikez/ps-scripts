@@ -7,4 +7,4 @@ if (test-path "$path\.git") {
 }
 
 write-host  "installing 'Pester' module"
-install-module pester -Verbose -Confirm:$false
+install-module pester -Verbose -Confirm:$false -Repository PSGallery
