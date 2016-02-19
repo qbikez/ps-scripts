@@ -1,3 +1,5 @@
+param ($path = ".")
+
 function ExitWithCode 
 { 
     param 
@@ -9,14 +11,14 @@ function ExitWithCode
     exit 
 }
 
-$artifacts = "$psscriptroot\..\artifacts"
+$artifacts = "$path\artifacts"
 
 try {
 if (test-path "$artifacts\test-result.xml") {
     remove-item "$artifacts\test-result.xml"
 }
 
-$testResultCode = & "$PSScriptRoot\test.ps1"
+$testResultCode = & "$PSScriptRoot\test.ps1" $path
 
 if (!(test-path "$artifacts\test-result.xml")) {
     throw "test results not found at $artifacts\test-result.xml!"

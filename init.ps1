@@ -1,3 +1,5 @@
+param ($path = ".")
+
 . $psscriptroot\imports\get-envinfo.ps1
 
 $e = get-envinfo -checkcommands "Install-Module"

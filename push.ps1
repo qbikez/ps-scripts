@@ -1,15 +1,10 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param([switch][bool]$newversion)
+param($path, [switch][bool]$newversion)
 
 
 function push-module {
 [CmdletBinding(SupportsShouldProcess=$true)]
 param($modulepath, [switch][bool]$newversion)
-
-    $envscript = "$psscriptroot\..\.env.ps1" 
-    if (test-path "$envscript") {
-        . $envscript
-    }
 
     $repo = "$env:PS_PUBLISH_REPO"
     $key = "$env:PS_PUBLISH_REPO_KEY"
@@ -30,6 +25,13 @@ param($modulepath, [switch][bool]$newversion)
 
 }
 
+$envscript = "$path\.env.ps1" 
+if (test-path "$envscript") {
+    . $envscript
+}
+
+  
+
 $root = $psscriptroot
-$modules = get-childitem "$root\..\src" -filter "*.psm1" -recurse | % { $_.Directory.FullName }
+$modules = get-childitem "$path\src" -filter "*.psm1" -recurse | % { $_.Directory.FullName }
 $modules | % { push-module $_ -newversion:$newversion }
