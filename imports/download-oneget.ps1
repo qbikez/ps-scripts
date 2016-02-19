@@ -46,7 +46,12 @@ function fix-oneget() {
         Get-ChildItem $moduleDir -Recurse
         
         # check if it works
+        
         if (get-module powershellget) { remove-module powershellget }        
+        
+        write-host "available powershellget modules:"
+        get-module powershellget -ListAvailable
+        
         import-module powershellget -ErrorAction Stop -MinimumVersion 1.0.0.1
     }
 }

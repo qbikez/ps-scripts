@@ -31,7 +31,7 @@ if (!(test-path "$artifacts\test-result.xml")) {
         throw "test artifacts not found at '$artifacts\test-result.xml'!"
 }
     
-
+$resultpath = (get-item "$artifacts\test-result.xml").FullName
 $content = get-content "$artifacts\test-result.xml" | out-string
 if ([string]::isnullorwhitespace($content)) {
     throw "$artifacts\test-result.xml is empty!"
@@ -43,11 +43,11 @@ else {
 $url = "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)"
 #$url = https://ci.appveyor.com/api/testresults/nunit/bq558ckwevwb47qb
 # upload results to AppVeyor
-write-host "uploading test result from $("$artifacts\test-result.xml")  to $url"
+write-host "uploading test result from $resultpath to $url"
 $wc = New-Object 'System.Net.WebClient'
 
 try {
-    $r = $wc.UploadFile($url, ("$artifacts\test-result.xml"))
+    $r = $wc.UploadFile($url, $resultpath)
     
     write-host "upload done. result = $r"
 } 
