@@ -1,5 +1,5 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($path, [switch][bool]$newversion)
+param($path = ".", [switch][bool]$newversion)
 
 
 function push-module {
