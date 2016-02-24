@@ -1,5 +1,5 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($path, [switch][bool]$newversion)
+param($path, [switch][bool]$newversion, $buildno)
 
 
 function push-module {
@@ -18,6 +18,7 @@ param($modulepath, [switch][bool]$newversion)
     } else {
         $newver = $ver
     }
+    if ($buildno -ne $null) { $newver += ".$buildno" }
     set-moduleversion $modulepath -version $newver
 
     import-module PowerShellGet
