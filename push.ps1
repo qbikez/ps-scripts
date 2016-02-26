@@ -14,12 +14,14 @@ param($modulepath, [switch][bool]$newversion)
     . $psscriptroot\imports\nuspec-tools.ps1
 
     $ver = get-moduleversion $modulepath
+    write-verbose "detected module version: $ver"
     if ($newversion) {
         $newver = Incremet-Version $ver
     } else {
         $newver = $ver
     }
     if ($buildno -ne $null) { $newver += ".$buildno" }
+    write-verbose "new module version: $newver"
     set-moduleversion $modulepath -version $newver
 
     import-module PowerShellGet
