@@ -50,7 +50,11 @@ function Incremet-Version([Parameter(mandatory=$true)]$ver, [VersionComponent]$c
      
     $vernums = $ver.Split(@('.','-'))
     $lastNumIdx = $component
-    $lastNum = [int]::Parse($vernums[$lastNumIdx])
+    try {
+        $lastNum = [int]::Parse($vernums[$lastNumIdx])
+    } catch {
+        throw "failed to parse version string '$ver', lastnum: '$($vernums[$lastNumIdx])'"
+    }
     
     <# for($i = $vernums.Count-1; $i -ge 0; $i--) {
         if ([int]::TryParse($vernums[$i], [ref] $lastNum)) {

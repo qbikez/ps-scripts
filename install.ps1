@@ -1,5 +1,5 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($srcDir = ".", [switch][bool] $importonly) 
+param($srcDir = $null, [switch][bool] $importonly) 
 
 function install-modulelink {
     [CmdletBinding(SupportsShouldProcess=$true)]
@@ -29,6 +29,10 @@ function install-modulelink {
 }
 
 if (!$importonly) {
+    if ($srcDir -eq $null) {
+        $srcDir = "$psscriptroot\..\.."
+    }
+
     $wid=[System.Security.Principal.WindowsIdentity]::GetCurrent()
     $prp=new-object System.Security.Principal.WindowsPrincipal($wid)
     $adm=[System.Security.Principal.WindowsBuiltInRole]::Administrator
@@ -36,10 +40,15 @@ if (!$importonly) {
     
     if ($IsAdmin) {    
         $root = $psscriptroot
-        $modules = get-childitem "$root\..\$srcDir" -filter "*.psm1" -recurse | % { $_.Directory.FullName }
+        $modules = get-childitem "$srcDir" -filter "*.psm1" -recurse | % { $_.Directory.FullName }
+        
+        if ($modules -eq $null -or $modules.Length -eq 0) {
+            throw "no modules found in $srcDir"
+        }
+        
         $modules | % { install-modulelink $_ }
     } else {
-        Invoke-Elevated .\install.ps1 @PSBoundParameters
+        Invoke-Elevated $psscriptroot\install.ps1 @PSBoundParameters
     }
     
      

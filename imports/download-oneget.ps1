@@ -22,14 +22,36 @@
 }
 
 function fix-oneget() {
-    if ($PSVersionTable.PSVersion.Major -lt 5) {
-        $target = (get-module powershellget -ListAvailable).path        
-        $target = join-path (split-path -parent $target) "PSGet.psm1"
-        $src = "https://raw.githubusercontent.com/qbikez/PowerShellGet/master/PowerShellGet/PSGet.psm1"
+    if ($PSVersionTable.PSVersion.Major -lt 5 -or $true) {
+        
+        $modulesrc = (get-module powershellget -ListAvailable).path 
+        $moduleDir = (split-path -parent $modulesrc)          
+        $target = join-path (split-path -parent $modulesrc) "PSGet.psm1"
+        $src = "https://gist.githubusercontent.com/qbikez/d6fc3151f9702ea1aab6/raw/PSGet.psm1"
         $tmp = "$tmpdir\PSGet.psm1"
         write-host "downloading patched Psget.psm1 from $src to $tmp"
         wget $src -OutFile $tmp
         write-host "overwriting $target with $tmp"
         Copy-Item $tmp $target -Force -Verbose
+        
+        $target = join-path (split-path -parent $modulesrc) "PowerShellGet.psd1"
+        $src = "https://gist.githubusercontent.com/qbikez/d6fc3151f9702ea1aab6/raw/PowerShellGet.psd1"
+        $tmp = "$tmpdir\PowerShellGet.psd1"
+        write-host "downloading patched Psget.psd1 from $src to $tmp"
+        wget $src -OutFile $tmp
+        write-host "overwriting $target with $tmp"
+        Copy-Item $tmp $target -Force -Verbose
+        
+        write-host "files in $moduleDir :"
+        Get-ChildItem $moduleDir -Recurse
+        
+        # check if it works
+        
+        if (get-module powershellget) { remove-module powershellget }        
+        
+        write-host "available powershellget modules:"
+        get-module powershellget -ListAvailable
+        
+        import-module powershellget -ErrorAction Stop -MinimumVersion 1.0.0.1
     }
 }

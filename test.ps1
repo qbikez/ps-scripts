@@ -1,8 +1,12 @@
 param ($path = ".")
 
+#$env:PSModulePath = [System.Environment]::GetEnvironmentVariable("PSModulePath", [System.EnvironmentVariableTarget]::User)
+
 import-module pester 
 
 $artifacts = "$path\artifacts"
+
+if (!(test-path $artifacts)) { $null = new-item -type directory $artifacts }
 
 write-host "running tests. artifacts dir = $((gi $artifacts).FullName)"
 
