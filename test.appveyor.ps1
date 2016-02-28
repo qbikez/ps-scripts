@@ -21,7 +21,7 @@ try {
 
 write-host "running appveyor test script. artifacts dir = $((gi $artifacts).FullName)"
 
-$testResultCode = & "$PSScriptRoot\test.ps1" (gi $path).FullName
+$testResultCode = & "$PSScriptRoot\test.ps1" (gi $path).FullName -EnableExit
 
 if (!(test-path "$artifacts\test-result.xml")) {
     throw "test results not found at $artifacts\test-result.xml!"
