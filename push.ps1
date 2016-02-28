@@ -1,15 +1,23 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($path = ".", [switch][bool]$newversion, $buildno)
+param($path = ".", [switch][bool]$newversion, $buildno, $source, $apikey)
 
 
 function push-module {
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($modulepath, [switch][bool]$newversion)
+param($modulepath, [switch][bool]$newversion, $buildno, $source, $apikey)
 	write-verbose "publishing module from dir $modulepath"
 	
-    $repo = "$env:PS_PUBLISH_REPO"
-    $key = "$env:PS_PUBLISH_REPO_KEY"
-
+    if ($source -ne $null) {
+        $repo = $source
+    } 
+    else {
+        $repo = "$env:PS_PUBLISH_REPO"
+    }
+    if ($apikey -ne $null) {
+        $key = $apikey
+    } else {
+        $key = "$env:PS_PUBLISH_REPO_KEY"
+    }
     . $psscriptroot\imports\set-moduleversion.ps1
     . $psscriptroot\imports\nuspec-tools.ps1
 
@@ -53,4 +61,4 @@ $modules = @(get-childitem "$path" -filter "*.psm1" -recurse | % { $_.Directory.
 
 write-verbose "found $($modules.length) modules: $modules"
 
-$modules | % { push-module $_ -newversion:$newversion }
+$modules | % { push-module $_ -newversion:$newversion -buildno $buildno -source $source -apikey $apikey }
