@@ -41,6 +41,11 @@ if (!$importonly) {
     if ($IsAdmin) {    
         $root = $psscriptroot
         $modules = get-childitem "$srcDir" -filter "*.psm1" -recurse | % { $_.Directory.FullName }
+        
+        if ($modules -eq $null -or $modules.Length -eq 0) {
+            throw "no modules found in $srcDir"
+        }
+        
         $modules | % { install-modulelink $_ }
     } else {
         Invoke-Elevated $psscriptroot\install.ps1 @PSBoundParameters
