@@ -6,6 +6,9 @@ param ($path = ".")
 $e = get-envinfo -checkcommands "Install-Module"
 $e
 
+write-host "PSVersions:"
+$PSVersionTable
+
 if ($e.commands["Install-Module"] -eq $null) {
     . $psscriptroot\imports\download-oneget.ps1
 
