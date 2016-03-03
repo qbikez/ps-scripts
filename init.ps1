@@ -19,10 +19,20 @@ if ($e.commands["Install-Module"] -eq $null) {
 
 Get-PSRepository
 
-
-# this isn't availalbe in the current official release of oneget 
-#install-packageprovider -Name NuGet -Force -MinimumVersion 2.8.5.201 -verbose
-
+try {
+# this isn't availalbe in the current official release of oneget ?
+install-packageprovider -Name NuGet -Force -MinimumVersion 2.8.5.201 -verbose
+}
+catch {
+ #ignore   
+}
+try {
+# this isn't availalbe in the current official release of oneget ?
+install-packageprovider -Name NuGet -MinimumVersion 2.8.5.201 -verbose
+}
+catch {
+ #ignore   
+}
 # this is a private function
 #Install-NuGetClientBinaries -force -CallerPSCmdlet $PSCmdlet
 #Install-NuGetClientBinaries -confirm:$false
