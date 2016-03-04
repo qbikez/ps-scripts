@@ -38,9 +38,11 @@ param($modulepath, [switch][bool]$newversion, $buildno, $source, $apikey)
     if (!(Get-PSRepository $repo -ErrorAction Continue)) {
         write-host "registering PSRepository $repo"
         Register-PSRepository -Name $repo -SourceLocation $repo/nuget -PublishLocation $repo -InstallationPolicy Trusted -Verbose
-    } 
-    write-host "publishing module $modulepath v$newver to repo $repo"
-    Publish-Module -Path $modulepath -Repository $repo  -NuGetApiKey $key -Verbose -Confirm:$false
+    }
+    $repourl = & git remote get-url origin 
+    write-host "publishing module $modulepath v$newver to repo $repo. projecturi=$repourl"
+    
+    Publish-Module -Path $modulepath -Repository $repo  -NuGetApiKey $key -Verbose -ProjectUri $repourl -Confirm:$false
 
 }
 
