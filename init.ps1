@@ -20,15 +20,9 @@ if ($e.commands["Install-Module"] -eq $null) {
 Get-PSRepository
 
 try {
-# this isn't availalbe in the current official release of oneget ?
+    write-host "installing nuget package provider"
+# this isn't availalbe in the current official release of oneget (?)
 install-packageprovider -Name NuGet -Force -MinimumVersion 2.8.5.201 -verbose
-}
-catch {
- #ignore   
-}
-try {
-# this isn't availalbe in the current official release of oneget ?
-install-packageprovider -Name NuGet -MinimumVersion 2.8.5.201 -verbose
 }
 catch {
  #ignore   
