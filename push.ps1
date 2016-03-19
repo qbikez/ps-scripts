@@ -1,7 +1,6 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
 param($path = ".", [switch][bool]$newversion, $buildno, $source, $apikey)
 
-
 function push-module {
 [CmdletBinding(SupportsShouldProcess=$true)]
 param($modulepath, [switch][bool]$newversion, $buildno, $source, $apikey)
@@ -24,7 +23,7 @@ param($modulepath, [switch][bool]$newversion, $buildno, $source, $apikey)
     $ver = get-moduleversion $modulepath
     write-verbose "detected module version: $ver"
     if ($newversion) {
-        $newver = Incremet-Version $ver
+        $newver = Increment-Version $ver
     } else {
         $newver = $ver
     }
