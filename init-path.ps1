@@ -1,5 +1,5 @@
 Import-Module csproj
-import-module logging
+import-module crayon
 
 get-nugettoolspath | % { 
     Log-Info "adding ``cyan``$_``d`` to PATH"; 
