@@ -35,6 +35,7 @@ function Incremet-NuspecVersion($nuspec = $null) {
    
     Set-NuspecVersion -version $ver2 -nuspec $nuspec   
 }
+
 if (-not ([System.Management.Automation.PSTypeName]'VersionComponent').Type) {
 Add-Type -TypeDefinition @"
    public enum VersionComponent

@@ -1,10 +1,10 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($path = ".", [switch][bool]$newversion, $buildno, $source, $apikey)
+param($path = ".", [switch][bool]$newversion, $version, $buildno, $source, $apikey)
 
 
 function push-module {
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($modulepath, [switch][bool]$newversion, $buildno, $source, $apikey)
+param($modulepath, [switch][bool]$newversion, $version, $buildno, $source, $apikey)
 	write-verbose "publishing module from dir $modulepath"
 	
     if ($source -ne $null) {
@@ -28,9 +28,15 @@ param($modulepath, [switch][bool]$newversion, $buildno, $source, $apikey)
     } else {
         $newver = $ver
     }
-    if ($buildno -ne $null) { $newver += ".$buildno" }
+    if ($version -ne $null) {
+        $newver = $version
+    }
+    
     write-verbose "new module version: $newver"
     set-moduleversion $modulepath -version $newver
+
+    if ($buildno -ne $null) { $newver += ".$buildno" }
+    write-verbose "publishing module version: $newver"
 
     import-module PowerShellGet
     import-module PackageManagement
@@ -42,8 +48,9 @@ param($modulepath, [switch][bool]$newversion, $buildno, $source, $apikey)
     $repourl = & git remote get-url origin 
     write-host "publishing module $modulepath v$newver to repo $repo. projecturi=$repourl"
     
-    Publish-Module -Path $modulepath -Repository $repo  -NuGetApiKey $key -Verbose -ProjectUri $repourl -Confirm:$false
-
+    if ($pscmdlet.ShouldProcess("publishing module $modulepath v$newver to repo $repo")) {
+        Publish-Module -Path $modulepath -Repository $repo -NuGetApiKey $key -Verbose
+    }
 }
 
 $envscript = "$path\.env.ps1" 
@@ -63,4 +70,4 @@ $modules = @(get-childitem "$path" -filter "*.psm1" -recurse | % { $_.Directory.
 
 write-verbose "found $($modules.length) modules: $modules"
 
-$modules | % { push-module $_ -newversion:$newversion -buildno $buildno -source $source -apikey $apikey }
+$modules | % { push-module $_ -newversion:$newversion -version $version -buildno $buildno -source $source -apikey $apikey }
