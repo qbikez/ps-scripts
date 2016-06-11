@@ -13,6 +13,12 @@ write-host "running tests. artifacts dir = $((gi $artifacts).FullName)"
 if (!(Test-Path $artifacts)) {
     $null = new-item $artifacts -ItemType directory
 }
-$r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat NUnitXml -EnableExit:$EnableExit
+
+$codeCoverage = @(Get-ChildItem "$path\src" -Filter "*.ps1" -Recurse) | % { $_.FullName }
+
+Write-Host "testing code coverage of files:"
+$codeCoverage | % { write-host $_ }
+
+$r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat NUnitXml -EnableExit:$EnableExit -CodeCoverage $codeCoverage
 
 return $r

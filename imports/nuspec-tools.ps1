@@ -1,3 +1,5 @@
+
+
 function Get-NuspecVersion($nuspec = $null) {
 	if ([string]::IsNullOrEmpty($nuspec)) {
 		$nuspec = Get-ChildItem . -Filter *.nuspec | select -First 1
@@ -42,31 +44,59 @@ Add-Type -TypeDefinition @"
    {
       Major = 0,
       Minor = 1,
-      Patch = 2
+      Patch = 2,
+      Build = 3,
+      Suffix = 4,
+      SuffixBuild = 5
    }
 "@
 }
 
-function Incremet-Version([Parameter(mandatory=$true)]$ver, [VersionComponent]$component = [VersionComponent]::Patch) {
-     
-    $vernums = $ver.Split(@('.','-'))
+function Increment-Version([Parameter(mandatory=$true)]$ver, [VersionComponent]$component = [VersionComponent]::Patch) {
+    
+    $null = $ver -match "(?<version>[0-9]+(\.[0-9]+)*)(-(?<suffix>.*)){0,1}"
+    $version = $matches["version"]
+    $suffix = $matches["suffix"]
+    
+    $vernums = $version.Split(@('.'))
     $lastNumIdx = $component
-    try {
+    if ($component -lt [VersionComponent]::Suffix) {
         $lastNum = [int]::Parse($vernums[$lastNumIdx])
-    } catch {
-        throw "failed to parse version string '$ver', lastnum: '$($vernums[$lastNumIdx])'"
+        
+        <# for($i = $vernums.Count-1; $i -ge 0; $i--) {
+            if ([int]::TryParse($vernums[$i], [ref] $lastNum)) {
+                $lastNumIdx = $i
+                break
+            }
+        }#>
+        
+        $lastNum++
+        $vernums[$component] = $lastNum.ToString()
+        #each lesser component should be set to 0 
+        for($i = $component + 1; $i -lt $vernums.length; $i++) {
+            $vernums[$i] = 0
+        }
+    } else {
+        if ([string]::IsNullOrEmpty($suffix)) {
+            throw "version '$ver' has no suffix"
+        }
+        
+        if ($component -eq [VersionComponent]::SuffixBuild) {
+            if ($suffix -match "build([0-9]+)") {
+                $num = [int]$matches[1]
+                $num++
+                $suffix = $suffix -replace "build[0-9]+","build$($num.ToString("###"))"
+            }
+            else {
+                throw "suffix '$suffix' does not match build[0-9] pattern"
+            }
+        }
     }
     
-    <# for($i = $vernums.Count-1; $i -ge 0; $i--) {
-        if ([int]::TryParse($vernums[$i], [ref] $lastNum)) {
-            $lastNumIdx = $i
-            break
-        }
-    }#>
-    
-    $lastNum++
-    $vernums[$vernums.Count-1] = $lastNum.ToString()
     $ver2 = [string]::Join(".", $vernums)
+    if (![string]::IsNullOrEmpty($suffix)) {
+        $ver2 += "-$suffix"
+    }
 
     return $ver2
 }
