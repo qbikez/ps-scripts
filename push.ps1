@@ -31,10 +31,11 @@ param($modulepath, [switch][bool]$newversion, $version, $buildno, $source, $apik
         $newver = $version
     }
     
+    if ($buildno -ne $null) { $newver += ".$buildno" }
+
     write-verbose "new module version: $newver"
     set-moduleversion $modulepath -version $newver
 
-    if ($buildno -ne $null) { $newver += ".$buildno" }
     write-verbose "publishing module version: $newver"
 
     import-module PowerShellGet
