@@ -31,7 +31,13 @@ param($modulepath, [switch][bool]$newversion, $version, $buildno, $source, $apik
         $newver = $version
     }
     
-    if ($buildno -ne $null) { $newver += ".$buildno" }
+    if ($buildno -ne $null) { 
+        $splits = $newver.split(".")
+        if ($splits.length -gt 3) {
+            $newver = [string]::Join(".", ($splits | select -First 3))
+        }
+        $newver += ".$buildno"
+     }
 
     write-verbose "new module version: $newver"
     set-moduleversion $modulepath -version $newver
