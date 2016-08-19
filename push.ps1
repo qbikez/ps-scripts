@@ -31,11 +31,14 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         $newver = $version
     }
     
-    if ($buildno -ne $null) { 
+    if ($buildno -ne $null -or $newbuild) { 
         $splits = $newver.split(".")
+        $lastbuild = 0
         if ($splits.length -gt 3) {
             $newver = [string]::Join(".", ($splits | select -First 3))
-        }
+            $lastbuild = [int]::Parse($splits[3])            
+        }        
+        if ($newbuild) { $buildno = $lastbuild + 1 }
         $newver += ".$buildno"
      }
 
@@ -76,4 +79,4 @@ $modules = @(get-childitem "$path" -filter "*.psm1" -recurse | % { $_.Directory.
 
 write-verbose "found $($modules.length) modules: $modules"
 
-$modules | % { push-module $_ -newversion:$newversion -version $version -newbuild $newbuild -buildno $buildno -source $source -apikey $apikey }
+$modules | % { push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey }
