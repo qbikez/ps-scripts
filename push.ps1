@@ -1,9 +1,9 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($path = ".", [switch][bool]$newversion, $version, $buildno, $source, $apikey)
+param($path = ".", [switch][bool]$newversion, $version, [switch][bool]$newbuild, $buildno, $source, $apikey)
 
 function push-module {
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($modulepath, [switch][bool]$newversion, $version, $buildno, $source, $apikey)
+param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version, $buildno, $source, $apikey)
 	write-verbose "publishing module from dir $modulepath"
 	
     if ($source -ne $null) {
@@ -70,4 +70,4 @@ $modules = @(get-childitem "$path" -filter "*.psm1" -recurse | % { $_.Directory.
 
 write-verbose "found $($modules.length) modules: $modules"
 
-$modules | % { push-module $_ -newversion:$newversion -version $version -buildno $buildno -source $source -apikey $apikey }
+$modules | % { push-module $_ -newversion:$newversion -version $version -newbuild $newbuild -buildno $buildno -source $source -apikey $apikey }
