@@ -23,8 +23,10 @@
 
 function fix-oneget() {
     if ($PSVersionTable.PSVersion.Major -lt 5 -or $true) {
-        
-        $modulesrc = (get-module powershellget -ListAvailable).path 
+        $psgetmodules = @(get-module powershellget -ListAvailable)
+        write-host "psget modules:"
+        $psgetmodules
+        $modulesrc = $psgetmodules[0].path
         $moduleDir = (split-path -parent $modulesrc)          
         $target = join-path (split-path -parent $modulesrc) "PSGet.psm1"
         $src = "https://gist.githubusercontent.com/qbikez/d6fc3151f9702ea1aab6/raw/PSGet.psm1"

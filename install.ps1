@@ -3,29 +3,36 @@ param($srcDir = $null, [switch][bool] $importonly)
 
 function install-modulelink {
     [CmdletBinding(SupportsShouldProcess=$true)]
-    param([Parameter(mandatory=$true)][string]$modulename) 
+    param([Parameter(mandatory=$true)][string]$modulename, [switch][bool]$recurse) 
     
-    
-    $target = $modulename
-    if ($target.EndsWith(".psm1")) {
-        $target = split-path -parent ((get-item $target).FullName)    
-    }
-    $target = (get-item $target).FullName
-    
-    $modulename = split-path -leaf $target
-    $path = "C:\Program Files\WindowsPowershell\Modules\$modulename"
-    if (test-path $path) {
-        if ($PSCmdlet.ShouldProcess("removing path $path")) {
-            # packagemanagement module may be locking some files in existing module dir
-            if (gmo powershellget) { rmo powershellget }
-            if (gmo packagemanagement) { rmo packagemanagement }
-            remove-item -Recurse $path -force
-            # in case of mklink junction, first we remove junction, then we have to remove remaining empty dir
-            if (test-path $path) { remove-item -Recurse $path }
+    if ($recurse) {
+        $modules = get-childitem $modulename -filter "*.psm1" -Recurse
+        foreach($_ in $modules) {
+            install-modulelink $_.fullname
         }
     }
-    write-host "executing mklink /J $path $target"
-    cmd /C "mklink /J ""$path"" ""$target"""
+    else {
+        $target = $modulename
+        if ($target.EndsWith(".psm1")) {
+            $target = split-path -parent ((get-item $target).FullName)    
+        }
+        $target = (get-item $target).FullName
+    
+        $modulename = split-path -leaf $target
+        $path = "C:\Program Files\WindowsPowershell\Modules\$modulename"
+        if (test-path $path) {
+            if ($PSCmdlet.ShouldProcess("removing path $path")) {
+                # packagemanagement module may be locking some files in existing module dir
+                if (gmo powershellget) { rmo powershellget }
+                if (gmo packagemanagement) { rmo packagemanagement }
+                remove-item -Recurse $path -force
+                # in case of mklink junction, first we remove junction, then we have to remove remaining empty dir
+                if (test-path $path) { remove-item -Recurse $path }
+            }
+        }
+        write-host "executing mklink /J $path $target"
+        cmd /C "mklink /J ""$path"" ""$target"""
+    }
 }
 
 if (!$importonly) {
