@@ -38,13 +38,23 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
+                ipmo cache -ErrorAction stop
                 $key = get-passwordcached $repo
+            } catch {
+            }
+        }
+        if ([string]::IsNullOrEmpty($key)) {
+            try {
+                ipmo oneliners -ErrorAction stop
+                $settings = import-settings
+                $seckey = $settings["$repo.apikey"]
+                if ($seckey -ne $null) { $key = convertto-plaintext $seckey }
             } catch {
             }
         }
 
         if ([string]::IsNullOrEmpty($key)) {
-            throw "no apikey given, no PS_PUBLISH_REPO_KEY env variable set and no cached password for repo $repo found"
+            throw "no apikey given, no PS_PUBLISH_REPO_KEY env variable set and no cached password for repo '$repo' found"
         }
 
         . $psscriptroot\imports\set-moduleversion.ps1
