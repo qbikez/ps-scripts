@@ -48,7 +48,7 @@ if (!$importonly) {
         
         $modules | % { install-modulelink $_ }
     } else {
-        Invoke-Elevated $psscriptroot\install.ps1 @PSBoundParameters
+        Invoke-Elevated $psscriptroot\install.ps1 @PSBoundParameters -verbose
     }
     
      
