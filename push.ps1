@@ -15,7 +15,11 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
     $_path = $env:path
     try {
         ipmo pathutils
-        Add-ToPath "$psscriptroot/.tools/nuget.exe" -first
+        write-host "adding '$psscriptroot\.tools' to PATH"
+        Add-ToPath "$psscriptroot\.tools" -first
+        write-host "PATH: $env:path"
+        $nuget = (get-command "nuget.exe").Source
+        write-host "using nuget at '$nuget'" 
 
         if ($source -ne $null) {
             $repo = $source
