@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param($path = ".")
+param($path = ".", $pesterVersion = $null)
 
 if (test-path "$path\.git") {
      write-host "restoring git submodules"
@@ -23,5 +23,9 @@ if ($pesterfromsource) {
 
 	popd
 } else {
-	install-module pester -Verbose -Confirm:$false -Repository PSGallery
+	$a = @{}
+	if ($pesterversion -ne $null) {
+		$a.RequiredVersion = $pesterVersion
+	}
+	install-module pester -Verbose -Confirm:$false -Repository PSGallery @a
 }
