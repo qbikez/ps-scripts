@@ -29,3 +29,9 @@ if ($pesterfromsource) {
 	}
 	install-module pester -Verbose -Confirm:$false -Repository PSGallery @a
 }
+
+
+write-host "Installing 'require' module"
+install-module require 
+import-module require
+req pathutils

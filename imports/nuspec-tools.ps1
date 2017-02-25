@@ -1,7 +1,6 @@
 
 
 function Get-NuspecVersion {
-    [Diagnostics.CodeAnalysis.SuppressMessage("PSProvideDefaultParameterValue")]
     param ($nuspec = $null)
     
 	if ([string]::IsNullOrEmpty($nuspec)) {
