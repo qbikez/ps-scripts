@@ -23,8 +23,8 @@ function install-modulelink {
         if (test-path $path) {
             if ($PSCmdlet.ShouldProcess("removing path $path")) {
                 # packagemanagement module may be locking some files in existing module dir
-                if (gmo powershellget) { rmo powershellget }
-                if (gmo packagemanagement) { rmo packagemanagement }
+                if (Get-Module powershellget) { Remove-Module powershellget }
+                if (Get-Module packagemanagement) { Remove-Module packagemanagement }
                 remove-item -Recurse $path -force
                 # in case of mklink junction, first we remove junction, then we have to remove remaining empty dir
                 if (test-path $path) { remove-item -Recurse $path }
@@ -36,7 +36,7 @@ function install-modulelink {
 }
 
 if (!$importonly) {
-    if ($srcDir -eq $null) {
+    if ($null -eq $srcDir) {
         $srcDir = "$psscriptroot\..\.."
     }
 
@@ -46,14 +46,13 @@ if (!$importonly) {
     $IsAdmin=$prp.IsInRole($adm)
     
     if ($IsAdmin) {    
-        $root = $psscriptroot
-        $modules = get-childitem "$srcDir" -filter "*.psm1" -recurse | % { $_.Directory.FullName }
+        $modules = get-childitem "$srcDir" -filter "*.psm1" -recurse | %{ $_.Directory.FullName }
         
-        if ($modules -eq $null -or $modules.Length -eq 0) {
+        if ($null -eq $modules -or $modules.Length -eq 0) {
             throw "no modules found in $srcDir"
         }
         
-        $modules | % { install-modulelink $_ }
+        $modules | %{ install-modulelink $_ }
     } else {
         Invoke-Elevated $psscriptroot\install.ps1 @PSBoundParameters -verbose
     }

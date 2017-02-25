@@ -14,14 +14,14 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
     }
     $_path = $env:path
     try {
-        ipmo pathutils
+        Import-Module pathutils
         write-host "adding '$psscriptroot\.tools' to PATH"
         Add-ToPath "$psscriptroot\.tools" -first
         write-host "PATH: $env:path"
         $nuget = (get-command "nuget.exe").Source
         write-host "using nuget at '$nuget'" 
 
-        if ($source -ne $null) {
+        if ($null -ne $source) {
             $repo = $source
         } 
         else {
@@ -35,25 +35,27 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
             throw "no repository given and no PS_PUBLISH_REPO env variable set"
         }
 
-        if ($apikey -ne $null) {
+        if ($null -ne $apikey) {
             $key = $apikey
         } else {
             $key = "$env:PS_PUBLISH_REPO_KEY"
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
-                ipmo cache -ErrorAction stop
+                Import-Module cache -ErrorAction stop
                 $key = get-passwordcached $repo
             } catch {
+                write-error "'cache' module is not available" -ErrorAction ignore
             }
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
-                ipmo oneliners -ErrorAction stop
+                Import-Module oneliners -ErrorAction stop
                 $settings = import-settings
                 $seckey = $settings["$repo.apikey"]
-                if ($seckey -ne $null) { $key = convertto-plaintext $seckey }
+                if ($null -ne $seckey) { $key = convertto-plaintext $seckey }
             } catch {
+                 write-error "'oneliners' module is not available" -ErrorAction ignore
             }
         }
 
@@ -71,11 +73,11 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         } else {
             $newver = $ver
         }
-        if ($version -ne $null) {
+        if ($null -ne $version) {
             $newver = $version
         }
     
-        if ($buildno -ne $null -or $newbuild) { 
+        if ($null -ne $buildno -or $newbuild) { 
             $splits = $newver.split(".")
             $lastbuild = 0
             if ($splits.length -gt 3) {
@@ -114,8 +116,6 @@ $envscript = "$path\.env.ps1"
 if (test-path "$envscript") {
     . $envscript
 }
-
-$root = $psscriptroot
 
 if (test-path $path\src) {
 	$path = "$path\src"

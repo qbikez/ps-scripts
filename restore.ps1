@@ -24,7 +24,7 @@ if ($pesterfromsource) {
 	popd
 } else {
 	$a = @{}
-	if ($pesterversion -ne $null) {
+	if ($null -ne $pesterversion) {
 		$a.RequiredVersion = $pesterVersion
 	}
 	install-module pester -Verbose -Confirm:$false -Repository PSGallery @a
