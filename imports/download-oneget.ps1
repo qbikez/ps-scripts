@@ -10,11 +10,11 @@
     $log = "$tmpdir\log.txt"
     if (!(test-path $dest)) {
         write-host "downloading $dest"
-        wget -Uri $url -OutFile $dest
+        Invoke-WebRequest -Uri $url -OutFile $dest
     }
     write-host "installing $dest"
-    $out = & cmd /c start /wait msiexec /i $dest /qn /passive /log "$log"
-    write-host "install done"
+    $null = & cmd /c start /wait msiexec /i $dest /qn /passive /log "$log"
+    
     write-host "## log: ##"
     Get-Content $log | write-host
     write-host "## log end ##"
@@ -32,7 +32,7 @@ function fix-oneget() {
         $src = "https://gist.githubusercontent.com/qbikez/d6fc3151f9702ea1aab6/raw/PSGet.psm1"
         $tmp = "$tmpdir\PSGet.psm1"
         write-host "downloading patched Psget.psm1 from $src to $tmp"
-        wget $src -OutFile $tmp
+        Invoke-WebRequest $src -OutFile $tmp
         write-host "overwriting $target with $tmp"
         Copy-Item $tmp $target -Force -Verbose
         
@@ -40,7 +40,7 @@ function fix-oneget() {
         $src = "https://gist.githubusercontent.com/qbikez/d6fc3151f9702ea1aab6/raw/PowerShellGet.psd1"
         $tmp = "$tmpdir\PowerShellGet.psd1"
         write-host "downloading patched Psget.psd1 from $src to $tmp"
-        wget $src -OutFile $tmp
+        Invoke-WebRequest $src -OutFile $tmp
         write-host "overwriting $target with $tmp"
         Copy-Item $tmp $target -Force -Verbose
         

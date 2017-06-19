@@ -6,7 +6,7 @@ function get-envinfo($checkcommands) {
     $result.PSVersion | format-table | out-string | write-verbose
     
     write-verbose "Available commands:"
-    if ($checkcommands -eq $null) {
+    if ($null -eq $checkcommands) {
         $commands = "Install-Module"
     } else {
         $commands = $checkcommands
@@ -17,14 +17,14 @@ function get-envinfo($checkcommands) {
         $cmd = $null
         try {
             $cmd = get-command $c -ErrorAction SilentlyContinue
-            if ($cmd -ne $null) {
+            if ($null -ne $cmd) {
                 $result.Commands[$_] = $cmd
             }
         } catch {
             write-error $_
             $cmd = $null
         }
-        if ($cmd -eq $null) {
+        if ($null -eq $cmd) {
             write-warning "$($c):`t MISSING COMMAND"            
         }
         else {

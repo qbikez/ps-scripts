@@ -11,7 +11,7 @@ function find-ModulePsd([parameter(mandatory=$true)]$path) {
     }
     if (!(test-path $psd)) {
         $psd = get-childitem $path -Filter "*.psd1"
-        if ($psd -ne $null) {
+        if ($null -ne $psd) {
             $psd = $psd.FullName
             $modulename = [System.IO.Path]::GetFileNameWithoutExtension($psd)            
         }
@@ -24,13 +24,15 @@ function find-ModulePsd([parameter(mandatory=$true)]$path) {
 
 }
 
-function Set-ModuleVersion(
-    [parameter(mandatory=$true)]
-    $path,
-    [parameter(mandatory=$true)]
-    [string]$version
+function Set-ModuleVersion {
+    [CmdletBinding(SupportsShouldProcess=$true)]
+    param(
+        [parameter(mandatory=$true)]
+        $path,
+        [parameter(mandatory=$true)]
+        [string]$version
     ) 
-{
+
    $psd,$modulename = find-modulepsd $path
 
     $c = Get-Content $psd | Out-String 
@@ -38,7 +40,9 @@ function Set-ModuleVersion(
         write-host "replacing version $($Matches[1]) with $version in $psd"
     }
     $c = $c -replace "ModuleVersion\s=\s'.+'","ModuleVersion = '$version'" 
-    $c | Out-File $psd -encoding utf8
+    if ($PSCmdlet.ShouldProcess("save '$psd' with new version '$version'")) {
+        $c | Out-File $psd -encoding utf8
+    }
 }
 
 function Get-ModuleVersion(

@@ -9,7 +9,7 @@ $e
 write-host "PSVersions:"
 $PSVersionTable
 
-if ($e.commands["Install-Module"] -eq $null) {
+if ($null -eq $e.commands["Install-Module"]) {
     . $psscriptroot\imports\download-oneget.ps1
 
     download-oneget
@@ -28,7 +28,8 @@ try {
 install-packageprovider -Name NuGet -Force -MinimumVersion 2.8.5.201 -verbose
 }
 catch {
- #ignore   
+ # ignore   
+ write-error "failed to install nuget package provider" -errorAction Ignore
 }
 # this is a private function
 #Install-NuGetClientBinaries -force -CallerPSCmdlet $PSCmdlet

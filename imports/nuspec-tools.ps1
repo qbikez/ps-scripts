@@ -1,6 +1,8 @@
 
 
-function Get-NuspecVersion($nuspec = $null) {
+function Get-NuspecVersion {
+    param ($nuspec = $null)
+    
 	if ([string]::IsNullOrEmpty($nuspec)) {
 		$nuspec = Get-ChildItem . -Filter *.nuspec | select -First 1
     }
@@ -11,23 +13,27 @@ function Get-NuspecVersion($nuspec = $null) {
     return $ver
 }
 
-function Set-NuspecVersion([string] $version, $nuspec = $null) {
-	if ($nuspec -eq $null) {
+function Set-NuspecVersion {
+    [CmdletBinding(SupportsShouldProcess=$true)]
+    param([string] $version, $nuspec = $null)
+	if ($null -eq $nuspec) {
 		$nuspec = Get-ChildItem . -Filter *.nuspec | select -First 1
     }
     $content = Get-Content $nuspec
-    $content2 = $content | foreach { 
+    $content2 = $content | % { 
         if ($_ -match "<version>(.*)</version>") {       
             $_.Replace( $matches[0], "<version>$version</version>")
         } else {
             $_
         }
     }
-    $content2 | Set-Content $nuspec     
+    if ($PSCmdlet.ShouldProcess("save '$nuspec' with new version '$version'")) {
+        $content2 | Set-Content $nuspec
+    }     
 }
 
 function Incremet-NuspecVersion($nuspec = $null) {
-	if ($nuspec -eq $null) {
+	if ($null -eq $nuspec) {
 		$nuspec = Get-ChildItem . -Filter *.nuspec | select -First 1
     }
 
