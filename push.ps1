@@ -79,4 +79,9 @@ $modules = @(get-childitem "$path" -filter "*.psm1" -recurse | % { $_.Directory.
 
 write-verbose "found $($modules.length) modules: $modules"
 
-$modules | % { push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey }
+foreach($_ in $modules) { 
+    push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey -ErrorAction Stop
+    if ($env:APPVEYOR_API_URL -ne $null)  {
+        Add-AppveyorMessage -Message "Module $_ v $version build $Buildno published to $source" -Category Information 
+    }
+}
