@@ -123,7 +123,7 @@ if (test-path $path\src) {
 
 write-verbose "looking for modules in $((gi $path).fullname)"
 
-$modules = @(get-childitem "$path" -filter "*.psm1" -recurse | % { $_.Directory.FullName })
+$modules = @(get-childitem "$path" -filter "*.psd1" -recurse | % { $_.Directory.FullName })
 
 write-verbose "found $($modules.length) modules: $modules"
 
