@@ -43,19 +43,19 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         if ([string]::IsNullOrEmpty($key)) {
             try {
                 Import-Module cache -ErrorAction stop
-                $key = get-passwordcached $repo
+                $key = cache\get-passwordcached $repo
             } catch {
                 write-error "'cache' module is not available" -ErrorAction ignore
             }
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
-                Import-Module oneliners -ErrorAction stop
-                $settings = import-settings
+                Import-Module cache -ErrorAction stop
+                $settings = cache\import-settings
                 $seckey = $settings["$repo.apikey"]
                 if ($null -ne $seckey) { $key = convertto-plaintext $seckey }
             } catch {
-                 write-error "'oneliners' module is not available" -ErrorAction ignore
+                 write-error "'cache' module is not available" -ErrorAction ignore
             }
         }
 
