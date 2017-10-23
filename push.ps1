@@ -43,19 +43,19 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         if ([string]::IsNullOrEmpty($key)) {
             try {
                 Import-Module cache -ErrorAction stop
-                $key = get-passwordcached $repo
+                $key = cache\get-passwordcached $repo
             } catch {
                 write-error "'cache' module is not available" -ErrorAction ignore
             }
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
-                Import-Module oneliners -ErrorAction stop
-                $settings = import-settings
+                Import-Module cache -ErrorAction stop
+                $settings = cache\import-settings
                 $seckey = $settings["$repo.apikey"]
                 if ($null -ne $seckey) { $key = convertto-plaintext $seckey }
             } catch {
-                 write-error "'oneliners' module is not available" -ErrorAction ignore
+                 write-error "'cache' module is not available" -ErrorAction ignore
             }
         }
 
@@ -125,8 +125,19 @@ if (test-path $path\src) {
 
 write-verbose "looking for modules in $((gi $path).fullname)"
 
-$modules = @(get-childitem "$path" -filter "*.psm1" -recurse | % { $_.Directory.FullName })
+$modules = @(get-childitem "$path" -filter "*.psd1" -recurse | % { $_.Directory.FullName })
 
 write-verbose "found $($modules.length) modules: $modules"
 
-$modules | % { push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey }
+foreach($_ in $modules) { 
+    try {
+        $m = $_
+        push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey -ErrorAction Stop
+        if ($env:APPVEYOR_API_URL -ne $null)  {
+            Add-AppveyorMessage -Message "Module $_ v $version build $Buildno published to $source" -Category Information 
+        }
+    } catch {
+        write-warning "failed to push module '$m': $($_.Exception.Message) $($_.ScriptStackTrace)"
+        throw
+    }
+}
