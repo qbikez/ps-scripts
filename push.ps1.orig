@@ -42,16 +42,26 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
+<<<<<<< HEAD
                 Import-Module cache -ErrorAction stop -Verbose:$false
+                $key = Cache\get-passwordcached $repo
+=======
+                Import-Module cache -ErrorAction stop
                 $key = cache\get-passwordcached $repo
+>>>>>>> origin/master
             } catch {
                 write-error "'cache' module is not available" -ErrorAction ignore
             }
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
+<<<<<<< HEAD
+                Import-Module Cache -ErrorAction stop -Verbose:$false
+                $settings = Cache\import-settings
+=======
                 Import-Module cache -ErrorAction stop
                 $settings = cache\import-settings
+>>>>>>> origin/master
                 $seckey = $settings["$repo.apikey"]
                 if ($null -ne $seckey) { $key = convertto-plaintext $seckey }
             } catch {
@@ -113,7 +123,7 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         }    
     } catch {
         if ($env:APPVEYOR_API_URL -ne $null)  {
-            Add-AppveyorMessage -Message "Module $modulepath v $newver FAILED to publish: $($_.Exception.Message)" -Category Error
+            Add-AppveyorMessage -Message "Module modulepath v $newver FAILED to publish: $($_.Exception.Message)" -Category Error
         } else {
             throw
         }
@@ -139,5 +149,18 @@ $modules = @(get-childitem "$path" -filter "*.psd1" -recurse | % { $_.Directory.
 write-verbose "found $($modules.length) modules: $modules"
 
 foreach($_ in $modules) { 
+<<<<<<< HEAD
     push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey -ErrorAction Stop    
+=======
+    try {
+        $m = $_
+        push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey -ErrorAction Stop
+        if ($env:APPVEYOR_API_URL -ne $null)  {
+            Add-AppveyorMessage -Message "Module $_ v $version build $Buildno published to $source" -Category Information 
+        }
+    } catch {
+        write-warning "failed to push module '$m': $($_.Exception.Message) $($_.ScriptStackTrace)"
+        throw
+    }
+>>>>>>> origin/master
 }
