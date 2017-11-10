@@ -14,7 +14,7 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
     }
     $_path = $env:path
     try {
-        Import-Module pathutils
+        Import-Module pathutils -Verbose:$false
         write-host "adding '$psscriptroot\.tools' to PATH"
         Add-ToPath "$psscriptroot\.tools" -first
         write-host "PATH: $env:path"
@@ -42,16 +42,16 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
-                Import-Module cache -ErrorAction stop
-                $key = get-passwordcached $repo
+                Import-Module cache -ErrorAction stop -Verbose:$false
+                $key = Cache\get-passwordcached $repo
             } catch {
                 write-error "'cache' module is not available" -ErrorAction ignore
             }
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
-                Import-Module oneliners -ErrorAction stop
-                $settings = import-settings
+                Import-Module Cache -ErrorAction stop -Verbose:$false
+                $settings = Cache\import-settings
                 $seckey = $settings["$repo.apikey"]
                 if ($null -ne $seckey) { $key = convertto-plaintext $seckey }
             } catch {
@@ -93,8 +93,8 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
 
         write-verbose "publishing module version: $newver"
 
-        import-module PowerShellGet
-        import-module PackageManagement
+        import-module PowerShellGet -Verbose:$false
+        import-module PackageManagement -Verbose:$false
     
         if (!(Get-PSRepository $repo -ErrorAction Continue)) {
             write-host "registering PSRepository $repo"
@@ -104,7 +104,16 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         write-host "publishing module $modulepath v$newver to repo $repo. projecturi=$repourl"
     
         if ($pscmdlet.ShouldProcess("publishing module $modulepath v$newver to repo $repo")) {
-            Publish-Module -Path $modulepath -Repository $repo -NuGetApiKey $key -Verbose
+            Publish-Module -Path $modulepath -Repository $repo -NuGetApiKey $key -Verbose -ErrorAction stop
+            if ($env:APPVEYOR_API_URL -ne $null)  {
+                Add-AppveyorMessage -Message "Module $modulepath v $newver build $Buildno published to $repo" -Category Information 
+            }
+        }    
+    } catch {
+        if ($env:APPVEYOR_API_URL -ne $null)  {
+            Add-AppveyorMessage -Message "Module modulepath v $newver FAILED to publish: $($_.Exception.Message)" -Category Error
+        } else {
+            throw
         }
     }
     finally {
@@ -127,4 +136,6 @@ $modules = @(get-childitem "$path" -filter "*.psm1" -recurse | % { $_.Directory.
 
 write-verbose "found $($modules.length) modules: $modules"
 
-$modules | % { push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey }
+foreach($_ in $modules) { 
+    push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey -ErrorAction Stop    
+}
