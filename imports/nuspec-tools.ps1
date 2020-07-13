@@ -78,7 +78,7 @@ function Increment-Version([Parameter(mandatory=$true)]$ver, [VersionComponent]$
         
         $lastNum++
         $vernums[$component] = $lastNum.ToString()
-        #each lesser component should be set to 0 
+        #each lesser component Should -Be set to 0 
         for($i = $component + 1; $i -lt $vernums.length; $i++) {
             $vernums[$i] = 0
         }

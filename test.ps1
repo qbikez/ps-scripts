@@ -1,4 +1,4 @@
-param ($path = ".", [switch][bool]$EnableExit = $false)
+param ($path = ".", [switch][bool]$EnableExit = $false, [switch][bool]$coverage)
 
 #$env:PSModulePath = [System.Environment]::GetEnvironmentVariable("PSModulePath", [System.EnvironmentVariableTarget]::User)
 
@@ -19,6 +19,10 @@ $codeCoverage = @(Get-ChildItem "$path\src" -Filter "*.ps1" -Recurse) | % { $_.F
 Write-Host "testing code coverage of files:"
 $codeCoverage | % { write-host $_ }
 
-$r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat NUnitXml -EnableExit:$EnableExit -CodeCoverage $codeCoverage
+$a = @()
+if ($coverage) {
+    $a += @("-CodeCoverage",$codeCoverage)
+}
+$r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat NUnitXml -EnableExit:$EnableExit $a
 
 return $r
