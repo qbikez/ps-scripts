@@ -44,7 +44,7 @@ function get-msbuildPath {
 }
 
 function add-msbuildPath() {
-    if (!(test-command "msbuild")) { 
+    if (!(get-command "msbuild" -ErrorAction Ignore)) { 
         Write-Warning "'msbuild.exe' not found on PATH" 
         try {
             $path = get-msbuildPath
@@ -52,6 +52,7 @@ function add-msbuildPath() {
             $env:Path = "$env:Path;$path"
         }   
         catch {
+            Write-Warning $_
         }
     }
 }
