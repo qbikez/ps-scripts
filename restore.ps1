@@ -31,6 +31,6 @@ if ($pesterfromsource) {
 
 	popd
 } else {
-	req pester -version $pesterVersion
+	req pester -version $pesterVersion -scope CurrentUser
 }
 
