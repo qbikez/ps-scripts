@@ -1,10 +1,18 @@
 [CmdletBinding()]
-param($path = ".", $pesterVersion = $null)
+param($path = ".", $pesterVersion = "latest")
 
 if (test-path "$path\.git") {
      write-host "restoring git submodules"
      git submodule update --init --recursive 2>&1 | % { $_.ToString() }
 }
+
+write-host "Installing 'require' module"
+
+install-module require 
+import-module require
+
+req pathutils
+
 
 write-host  "installing 'Pester' module"
 
@@ -23,15 +31,6 @@ if ($pesterfromsource) {
 
 	popd
 } else {
-	$a = @{}
-	if ($null -ne $pesterversion) {
-		$a.RequiredVersion = $pesterVersion
-	}
-	install-module pester -Verbose -Confirm:$false -Repository PSGallery @a
+	req pester -version $pesterVersion
 }
 
-
-write-host "Installing 'require' module"
-install-module require 
-import-module require
-req pathutils
