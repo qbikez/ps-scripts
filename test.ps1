@@ -1,4 +1,4 @@
-param ($path = ".", [switch][bool]$EnableExit = $false, [switch][bool]$coverage)
+param ($path = ".", [switch][bool]$EnableExit = $false, [switch][bool]$coverage, $outputFormat = "NUnitXml")
 
 #$env:PSModulePath = [System.Environment]::GetEnvironmentVariable("PSModulePath", [System.EnvironmentVariableTarget]::User)
 
@@ -23,6 +23,6 @@ $a = @()
 if ($coverage) {
     $a += @("-CodeCoverage",$codeCoverage)
 }
-$r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat NUnitXml -EnableExit:$EnableExit $a
+$r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat:$outputFormat -EnableExit:$EnableExit $a
 
 return $r
