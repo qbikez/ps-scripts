@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param($path = ".", $pesterVersion = "latest")
+param($path = ".", $pesterVersion = $null)
 
 if (test-path "$path\.git") {
      write-host "restoring git submodules"
@@ -32,5 +32,10 @@ if ($pesterfromsource) {
 	popd
 } else {
 	# req pester -version $pesterVersion -scope CurrentUser
+	$a = @()
+	if ($pesterVersion) {
+		$a += "-MinimumVersion",$pesterVersion
+	}
+	Install-Module pester -Scope CurrentUser -Force $a
 }
 
