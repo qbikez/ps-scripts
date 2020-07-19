@@ -36,6 +36,6 @@ if ($pesterfromsource) {
 	if ($pesterVersion) {
 		$a += "-MinimumVersion",$pesterVersion
 	}
-	Install-Module pester -Scope CurrentUser -Force $a
+	Install-Module pester -Scope CurrentUser -Force @a
 }
 
