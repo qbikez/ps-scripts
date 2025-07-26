@@ -1,5 +1,13 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
-param($path = ".", [switch][bool]$newversion, $version, [switch][bool]$newbuild, $buildno, $source, $apikey)
+param(
+    $path = ".", 
+    [switch][bool]$newversion, 
+    $version, 
+    [switch][bool]$newbuild, 
+    $buildno, 
+    $source, 
+    $apikey,
+    [switch][bool]$force)
 
 function push-module {
 [CmdletBinding(SupportsShouldProcess=$true)]
@@ -162,7 +170,7 @@ else {
         $path = "$path\src"
     }
 
-    write-verbose "looking for modules in $((gi $path).fullname)"
+    write-verbose "looking for *.psm1 modules in $((gi $path).fullname)"
 
     $modules = @(get-childitem "$path" -filter "*.psd1" -recurse | % { $_.Directory.FullName })
 }
