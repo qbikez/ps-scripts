@@ -1,5 +1,5 @@
 function find-ModulePsd([parameter(mandatory=$true)]$path) {
-       if ($path.EndsWith(".psd1")) {
+    if ($path.EndsWith(".psd1")) {
         $psd = $path
     }
     elseif ($path.EndsWith(".psm1")) {
@@ -17,7 +17,7 @@ function find-ModulePsd([parameter(mandatory=$true)]$path) {
         }
     }
     if (!(test-path $psd)) {
-        throw "psd1 file '$psd' not found"
+        throw "psd1 file '$psd' not found in path '$path'"
     }
 
     return $psd,$modulename
