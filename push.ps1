@@ -1,25 +1,25 @@
-[CmdletBinding(SupportsShouldProcess=$true)]
+[CmdletBinding(SupportsShouldProcess = $true)]
 param($path = ".", [switch][bool]$newversion, $version, [switch][bool]$newbuild, $buildno, $source, $apikey)
 
 function push-module {
-[CmdletBinding(SupportsShouldProcess=$true)]
-param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version, $buildno, $source, $apikey)
-	write-verbose "publishing module from dir $modulepath"
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version, $buildno, $source, $apikey)
+    Write-Verbose "publishing module from dir $modulepath"
 	    
     $nugeturl = "https://dist.nuget.org/win-x86-commandline/v2.8.6/nuget.exe"
-    if (!(test-path "$psscriptroot/.tools/nuget.exe")) {
-        if (!(test-path "$psscriptroot/.tools")) { $null = mkdir "$psscriptroot/.tools" }
+    if (!(Test-Path "$psscriptroot/.tools/nuget.exe")) {
+        if (!(Test-Path "$psscriptroot/.tools")) { $null = mkdir "$psscriptroot/.tools" }
         # use nuget2, because nuget3 can cause errors when pushing modules (nuget.exe : '' is not a valid version string. At C:\Program Files\WindowsPowerShell\Modules\PowerShellGet\1.0.0.1\PSModule.psm1:6784 char:19)
-        invoke-webrequest $nugeturl -OutFile "$psscriptroot/.tools/nuget.exe"
+        Invoke-WebRequest $nugeturl -OutFile "$psscriptroot/.tools/nuget.exe"
     }
     $_path = $env:path
     try {
         Import-Module pathutils
-        write-host "adding '$psscriptroot\.tools' to PATH"
+        Write-Host "adding '$psscriptroot\.tools' to PATH"
         Add-ToPath "$psscriptroot\.tools" -first
-        write-host "PATH: $env:path"
-        $nuget = (get-command "nuget.exe").Source
-        write-host "using nuget at '$nuget'" 
+        Write-Host "PATH: $env:path"
+        $nuget = (Get-Command "nuget.exe").Source
+        Write-Host "using nuget at '$nuget'" 
 
         if ($null -ne $source) {
             $repo = $source
@@ -37,25 +37,28 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
 
         if ($null -ne $apikey) {
             $key = $apikey
-        } else {
+        }
+        else {
             $key = "$env:PS_PUBLISH_REPO_KEY"
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
                 Import-Module cache -ErrorAction stop
-                $key = get-passwordcached $repo
-            } catch {
-                write-error "'cache' module is not available" -ErrorAction ignore
+                $key = Get-PasswordCached $repo
+            }
+            catch {
+                Write-Error "'cache' module is not available" -ErrorAction ignore
             }
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
                 Import-Module oneliners -ErrorAction stop
-                $settings = import-settings
+                $settings = Import-Settings
                 $seckey = $settings["$repo.apikey"]
-                if ($null -ne $seckey) { $key = convertto-plaintext $seckey }
-            } catch {
-                 write-error "'oneliners' module is not available" -ErrorAction ignore
+                if ($null -ne $seckey) { $key = ConvertTo-PlainText $seckey }
+            }
+            catch {
+                Write-Error "'oneliners' module is not available" -ErrorAction ignore
             }
         }
 
@@ -67,10 +70,11 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         . $psscriptroot\imports\nuspec-tools.ps1
 
         $ver = get-moduleversion $modulepath
-        write-verbose "detected module version: $ver"
+        Write-Verbose "detected module version: $ver"
         if ($newversion) {
             $newver = Increment-Version $ver
-        } else {
+        }
+        else {
             $newver = $ver
         }
         if ($null -ne $version) {
@@ -86,22 +90,22 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
             }        
             if ($newbuild) { $buildno = $lastbuild + 1 }
             $newver += ".$buildno"
-         }
+        }
 
-        write-verbose "new module version: $newver"
+        Write-Verbose "new module version: $newver"
         set-moduleversion $modulepath -version $newver
 
-        write-verbose "publishing module version: $newver"
+        Write-Verbose "publishing module version: $newver"
 
-        import-module PowerShellGet
-        import-module PackageManagement
+        Import-Module PowerShellGet
+        Import-Module PackageManagement
     
         if (!(Get-PSRepository $repo -ErrorAction Continue)) {
-            write-host "registering PSRepository $repo"
+            Write-Host "registering PSRepository $repo"
             Register-PSRepository -Name $repo -SourceLocation $repo/nuget -PublishLocation $repo -InstallationPolicy Trusted -Verbose
         }
         $repourl = & git remote get-url origin 
-        write-host "publishing module $modulepath v$newver to repo $repo. projecturi=$repourl"
+        Write-Host "publishing module $modulepath v$newver to repo $repo. projecturi=$repourl"
     
         if ($pscmdlet.ShouldProcess("publishing module $modulepath v$newver to repo $repo")) {
             Publish-Module -Path $modulepath -Repository $repo -NuGetApiKey $key -Verbose
@@ -113,18 +117,19 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
 }
 
 $envscript = "$path\.env.ps1" 
-if (test-path "$envscript") {
+if (Test-Path "$envscript") {
     . $envscript
 }
 
-if (test-path $path\src) {
-	$path = "$path\src"
-} 
+Write-Verbose "looking for modules in $((gi $path).fullname)"
 
-write-verbose "looking for modules in $((gi $path).fullname)"
+$modules = @(Get-ChildItem "$path" -Filter "*.psm1" -Recurse | % { $_.Directory.FullName })
+if ($modules.length -eq 0 -and (Test-Path "$path\src")) {
+    $path = "$path\src"
+    $modules = @(Get-ChildItem "$path" -Filter "*.psm1" -Recurse | % { $_.Directory.FullName })
+}
 
-$modules = @(get-childitem "$path" -filter "*.psm1" -recurse | % { $_.Directory.FullName })
 
-write-verbose "found $($modules.length) modules: $modules"
+Write-Verbose "found $($modules.length) modules: $modules"
 
 $modules | % { push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey }
