@@ -1,4 +1,4 @@
-[CmdletBinding(SupportsShouldProcess=$true)]
+[CmdletBinding(SupportsShouldProcess = $true)]
 param(
     $path = ".", 
     [switch][bool]$newversion, 
@@ -10,25 +10,25 @@ param(
     [switch][bool]$force)
 
 function push-module {
-[CmdletBinding(SupportsShouldProcess=$true)]
-param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version, $buildno, $source, $apikey)
-	write-verbose "publishing module from dir $modulepath"
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version, $buildno, $source, $apikey)
+    Write-Verbose "publishing module from dir $modulepath"
 
     function use-localnuget() {
         #$nugeturl = "https://dist.nuget.org/win-x86-commandline/v2.8.6/nuget.exe"
         $nugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.1.0/nuget.exe"
-        if (!(test-path "$psscriptroot/.tools/nuget.exe")) {
-            if (!(test-path "$psscriptroot/.tools")) { $null = mkdir "$psscriptroot/.tools" }
+        if (!(Test-Path "$psscriptroot/.tools/nuget.exe")) {
+            if (!(Test-Path "$psscriptroot/.tools")) { $null = mkdir "$psscriptroot/.tools" }
             # use nuget2, because nuget3 can cause errors when pushing modules (nuget.exe : '' is not a valid version string. At C:\Program Files\WindowsPowerShell\Modules\PowerShellGet\1.0.0.1\PSModule.psm1:6784 char:19)
-            invoke-webrequest $nugeturl -OutFile "$psscriptroot/.tools/nuget.exe"
+            Invoke-WebRequest $nugeturl -OutFile "$psscriptroot/.tools/nuget.exe"
         }
         Import-Module pathutils -Verbose:$false
-        write-host "adding '$psscriptroot\.tools' to PATH"
+        Write-Host "adding '$psscriptroot\.tools' to PATH"
         Add-ToPath "$psscriptroot\.tools" -first
-        write-host "PATH: $env:path"
-        $nuget = (get-command "nuget.exe").Source
-        $nugetVersion = & $nuget | select -first 1
-        write-host "using nuget version '$nugetversion' at '$nuget'" 
+        Write-Host "PATH: $env:path"
+        $nuget = (Get-Command "nuget.exe").Source
+        $nugetVersion = & $nuget | select -First 1
+        Write-Host "using nuget version '$nugetversion' at '$nuget'" 
     }
     function get-psgallery($source) {
         if ($null -ne $source) {
@@ -47,25 +47,28 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
 
         if ($null -ne $apikey) {
             $key = $apikey
-        } else {
+        }
+        else {
             $key = "$env:PS_PUBLISH_REPO_KEY"
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
                 Import-Module cache -ErrorAction stop -Verbose:$false
-                $key = cache\get-passwordcached $repo
-            } catch {
-                write-error "'cache' module is not available" -ErrorAction ignore
+                $key = cache\Get-PasswordCached $repo
+            }
+            catch {
+                Write-Error "'cache' module is not available" -ErrorAction ignore
             }
         }
         if ([string]::IsNullOrEmpty($key)) {
             try {
                 Import-Module cache -ErrorAction stop
-                $settings = cache\import-settings
+                $settings = cache\Import-Settings
                 $seckey = $settings["$repo.apikey"]
-                if ($null -ne $seckey) { $key = convertto-plaintext $seckey }
-            } catch {
-                 write-error "'cache' module is not available" -ErrorAction ignore
+                if ($null -ne $seckey) { $key = ConvertTo-PlainText $seckey }
+            }
+            catch {
+                Write-Error "'cache' module is not available" -ErrorAction ignore
             }
         }
 
@@ -73,12 +76,12 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
             throw "no apikey given, no PS_PUBLISH_REPO_KEY env variable set and no cached password for repo '$repo' found"
         }
 
-        return $repo,$key
+        return $repo, $key
     }
 
-    function update-buildno([Parameter(Mandatory=$true)]$modulepath, [switch][bool]$newversion, [switch][bool] $newbuild, $version, $buildno) {
+    function update-buildno([Parameter(Mandatory = $true)]$modulepath, [switch][bool]$newversion, [switch][bool] $newbuild, $version, $buildno) {
         $ver = get-moduleversion $modulepath
-        write-verbose "detected module version: $ver"
+        Write-Verbose "detected module version: $ver"
 
         if ($null -ne $version) {
             $newver = $version
@@ -86,7 +89,8 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
         else {
             if ($newversion) {
                 $newver = Increment-Version $ver
-            } else {
+            }
+            else {
                 $newver = $ver
             }
         }
@@ -100,52 +104,54 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
             }
             if ($newbuild) { $buildno = $lastbuild + 1 }
             $newver += ".$buildno"
-         }
+        }
 
-        write-verbose "new module version: $newver"
+        Write-Verbose "new module version: $newver"
         set-moduleversion $modulepath -version $newver
 
-        return $newver,$buildno
+        return $newver, $buildno
     }
 
     $_path = $env:path
     try {
         use-localnuget
-        $repo,$key = get-psgallery $source
+        $repo, $key = get-psgallery $source
 
         . $psscriptroot\imports\set-moduleversion.ps1
         . $psscriptroot\imports\nuspec-tools.ps1
 
-        $newver,$buildno = update-buildno $modulepath -newbuild:$newbuild -newversion:$newversion -version:$version -buildno:$buildno
+        $newver, $buildno = update-buildno $modulepath -newbuild:$newbuild -newversion:$newversion -version:$version -buildno:$buildno
 
-        write-verbose "publishing module version: $newver"
+        Write-Verbose "publishing module version: $newver"
 
-        import-module PowerShellGet -Verbose:$false
-        import-module PackageManagement -Verbose:$false
+        Import-Module PowerShellGet -Verbose:$false
+        Import-Module PackageManagement -Verbose:$false
 
         if (!(Get-PSRepository $repo -ErrorAction Continue)) {
-            write-host "registering PSRepository $repo"
+            Write-Host "registering PSRepository $repo"
             $feed = $repo
             if (!$repo.contains("/nuget")) { $feed = "$repo/nuget" }
             Register-PSRepository -Name $repo -SourceLocation $feed -PublishLocation $repo -InstallationPolicy Trusted -Verbose
         }
 
         $repourl = & git remote get-url origin 
-        write-host "publishing module $modulepath v$newver to repo $repo. projecturi=$repourl"
+        Write-Host "publishing module $modulepath v$newver to repo $repo. projecturi=$repourl"
 
         if ($pscmdlet.ShouldProcess("publishing module $modulepath v$newver to repo $repo")) {
 
-            $psd,$modulename = find-modulepsd $path
+            $psd, $modulename = find-modulepsd $path
             Publish-Module -Name $psd -Repository $repo -NuGetApiKey $key -Verbose -ErrorAction stop
             
-            if ($null -ne $env:APPVEYOR_API_URL)  {
+            if ($null -ne $env:APPVEYOR_API_URL) {
                 Add-AppveyorMessage -Message "Module $modulepath v $newver build $Buildno published to $repo" -Category Information 
             }
         }
-    } catch {
-        if ($null -ne $env:APPVEYOR_API_URL)  {
+    }
+    catch {
+        if ($null -ne $env:APPVEYOR_API_URL) {
             Add-AppveyorMessage -Message "Module $modulepath v $newver FAILED to publish: $($_.Exception.Message)" -Category Error
-        } else {
+        }
+        else {
             throw
         }
     }
@@ -155,28 +161,27 @@ param($modulepath, [switch][bool]$newversion, [switch][bool]$newbuild, $version,
 }
 
 $envscript = "$path\.env.ps1" 
-if (test-path "$envscript") {
+if (Test-Path "$envscript") {
     . $envscript
 }
 
 $modules = @()
 
-if ($path.endsWith(".psd1"))
-{
-    $modules = @($path) | % { split-path -Parent $_ }
+if ($path.endsWith(".psd1")) {
+    $modules = @($path) | % { Split-Path -Parent $_ }
 }
 else {
-    if (test-path $path\src) {
+    if (Test-Path $path\src) {
         $path = "$path\src"
     }
 
-    write-verbose "looking for *.psm1 modules in $((gi $path).fullname)"
+    Write-Verbose "looking for *.psm1 modules in $((gi $path).fullname)"
 
-    $modules = @(get-childitem "$path" -filter "*.psd1" -recurse | % { $_.Directory.FullName })
+    $modules = @(Get-ChildItem "$path" -Filter "*.psd1" -Recurse | % { $_.Directory.FullName })
 }
 
-write-verbose "found $($modules.length) modules: $modules"
+Write-Verbose "found $($modules.length) modules: $modules"
 
-foreach($_ in $modules) { 
-    push-module $_  -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey -ErrorAction Stop    
+foreach ($_ in $modules) { 
+    push-module $_ -newversion:$newversion -version $version -newbuild:$newbuild -buildno $buildno -source $source -apikey $apikey -ErrorAction Stop    
 }
