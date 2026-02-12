@@ -67,97 +67,96 @@ function push-module {
                 $seckey = $settings["$repo.apikey"]
                 if ($null -ne $seckey) { $key = ConvertTo-PlainText $seckey }
             }
-            catch {
-                Write-Error "'cache' module is not available" -ErrorAction ignore
-            }
+            Write-Error "'cache' module is not available" -ErrorAction ignore
         }
-
-        if ([string]::IsNullOrEmpty($key)) {
-            throw "no apikey given, no PS_PUBLISH_REPO_KEY env variable set and no cached password for repo '$repo' found"
-        }
-
-        return $repo, $key
     }
 
-    function update-buildno([Parameter(Mandatory = $true)]$modulepath, [switch][bool]$newversion, [switch][bool] $newbuild, $version, $buildno) {
-        $ver = get-moduleversion $modulepath
-        Write-Verbose "detected module version: $ver"
+    if ([string]::IsNullOrEmpty($key)) {
+        throw "no apikey given, no PS_PUBLISH_REPO_KEY env variable set and no cached password for repo '$repo' found"
+    }
 
-        if ($null -ne $version) {
-            $newver = $version
+    return $repo, $key
+}
+
+function update-buildno([Parameter(Mandatory = $true)]$modulepath, [switch][bool]$newversion, [switch][bool] $newbuild, $version, $buildno) {
+    $ver = get-moduleversion $modulepath
+    Write-Verbose "detected module version: $ver"
+
+    if ($null -ne $version) {
+        $newver = $version
+    }
+    else {
+        if ($newversion) {
+            $newver = Increment-Version $ver
         }
         else {
-            if ($newversion) {
-                $newver = Increment-Version $ver
-            }
-            else {
-                $newver = $ver
-            }
+            $newver = $ver
         }
-
-        if ($null -ne $buildno -or $newbuild) {
-            $splits = $newver.split(".")
-            $lastbuild = 0
-            if ($splits.length -gt 3) {
-                $newver = [string]::Join(".", ($splits | select -First 3))
-                $lastbuild = [int]::Parse($splits[3])
-            }
-            if ($newbuild) { $buildno = $lastbuild + 1 }
-            $newver += ".$buildno"
-        }
-
-        Write-Verbose "new module version: $newver"
-        set-moduleversion $modulepath -version $newver
-
-        return $newver, $buildno
     }
 
-    $_path = $env:path
-    try {
-        use-localnuget
-        $repo, $key = get-psgallery $source
-
-        . $psscriptroot\imports\set-moduleversion.ps1
-        . $psscriptroot\imports\nuspec-tools.ps1
-
-        $newver, $buildno = update-buildno $modulepath -newbuild:$newbuild -newversion:$newversion -version:$version -buildno:$buildno
-
-        Write-Verbose "publishing module version: $newver"
-
-        Import-Module PowerShellGet -Verbose:$false
-        Import-Module PackageManagement -Verbose:$false
-
-        if (!(Get-PSRepository $repo -ErrorAction Continue)) {
-            Write-Host "registering PSRepository $repo"
-            $feed = $repo
-            if (!$repo.contains("/nuget")) { $feed = "$repo/nuget" }
-            Register-PSRepository -Name $repo -SourceLocation $feed -PublishLocation $repo -InstallationPolicy Trusted -Verbose
+    if ($null -ne $buildno -or $newbuild) {
+        $splits = $newver.split(".")
+        $lastbuild = 0
+        if ($splits.length -gt 3) {
+            $newver = [string]::Join(".", ($splits | select -First 3))
+            $lastbuild = [int]::Parse($splits[3])
         }
+        if ($newbuild) { $buildno = $lastbuild + 1 }
+        $newver += ".$buildno"
+    }
 
-        $repourl = & git remote get-url origin 
-        Write-Host "publishing module $modulepath v$newver to repo $repo. projecturi=$repourl"
+    Write-Verbose "new module version: $newver"
+    set-moduleversion $modulepath -version $newver
 
-        if ($pscmdlet.ShouldProcess("publishing module $modulepath v$newver to repo $repo")) {
+    Write-Verbose "publishing module version: $newver"
+    return $newver, $buildno
+}
 
-            $psd, $modulename = find-modulepsd $path
-            Publish-Module -Name $psd -Repository $repo -NuGetApiKey $key -Verbose -ErrorAction stop
+$_path = $env:path
+try {
+    use-localnuget
+    $repo, $key = get-psgallery $source
+
+    . $psscriptroot\imports\set-moduleversion.ps1
+    . $psscriptroot\imports\nuspec-tools.ps1
+
+    $newver, $buildno = update-buildno $modulepath -newbuild:$newbuild -newversion:$newversion -version:$version -buildno:$buildno
+
+
+    Import-Module PowerShellGet -Verbose:$false
+    Import-Module PackageManagement -Verbose:$false
+
+    if (!(Get-PSRepository $repo -ErrorAction Continue)) {
+        Write-Host "registering PSRepository $repo"
+        $feed = $repo
+        if (!$repo.contains("/nuget")) { $feed = "$repo/nuget" }
+        Register-PSRepository -Name $repo -SourceLocation $feed -PublishLocation $repo -InstallationPolicy Trusted -Verbose
+    }
+
+    $repourl = & git remote get-url origin 
+    Write-Host "publishing module $modulepath v$newver to repo $repo. projecturi=$repourl"
+
+    if ($pscmdlet.ShouldProcess("publishing module $modulepath v$newver to repo $repo")) {
+
+        $psd, $modulename = find-modulepsd $path
+        Publish-Module -Name $psd -Repository $repo -NuGetApiKey $key -Verbose -ErrorAction stop
             
-            if ($null -ne $env:APPVEYOR_API_URL) {
-                Add-AppveyorMessage -Message "Module $modulepath v $newver build $Buildno published to $repo" -Category Information 
-            }
-        }
-    }
-    catch {
         if ($null -ne $env:APPVEYOR_API_URL) {
-            Add-AppveyorMessage -Message "Module $modulepath v $newver FAILED to publish: $($_.Exception.Message)" -Category Error
-        }
-        else {
-            throw
+            Add-AppveyorMessage -Message "Module $modulepath v $newver build $Buildno published to $repo" -Category Information 
         }
     }
-    finally {
-        $env:path = $_path
+}
+catch {
+    if ($null -ne $env:APPVEYOR_API_URL) {
+        Add-AppveyorMessage -Message "Module $modulepath v $newver FAILED to publish: $($_.Exception.Message)" -Category Error
     }
+    else {
+        throw
+    }
+}
+finally {
+    $env:path = $_path
+}
 }
 
 $envscript = "$path\.env.ps1" 
