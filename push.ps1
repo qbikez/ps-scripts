@@ -25,7 +25,6 @@ function push-module {
         Import-Module pathutils -Verbose:$false
         Write-Host "adding '$psscriptroot\.tools' to PATH"
         Add-ToPath "$psscriptroot\.tools" -first
-        Write-Host "PATH: $env:path"
         $nuget = (Get-Command "nuget.exe").Source
         $nugetVersion = & $nuget | select -First 1
         Write-Host "using nuget version '$nugetversion' at '$nuget'" 

@@ -52,10 +52,15 @@ function Get-ModuleVersion(
 {
     $psd,$modulename = find-modulepsd $path
     
-    $c = Get-Content $psd | Out-String 
-    if ($c -match "ModuleVersion\s=\s'(.+)'") {
-        return $($Matches[1])
+    if (!$psd) {
+        throw "psd1 file '$psd' not found in path '$path'"
     }
-    
-    return $null
+    $c = Get-Content $psd
+    $versionLine = $c | Where-Object { $_ -notmatch "^\s*#" } `
+        | Where-Object { $_ -match "ModuleVersion\s*=\s*'(.+)'" } `
+        | Select-Object -First 1
+    if (!$versionLine) {
+        throw "ModuleVersion not found in $psd"
+    }
+    return $Matches[1]
 }
