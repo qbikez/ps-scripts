@@ -67,6 +67,7 @@ function push-module {
                 $seckey = $settings["$repo.apikey"]
                 if ($null -ne $seckey) { $key = ConvertTo-PlainText $seckey }
             }
+            catch {
                  write-error "'cache' module is not available" -ErrorAction ignore
             }
         }
