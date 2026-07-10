@@ -12,25 +12,34 @@ if (!(Test-Path $artifacts)) {
     $null = New-Item $artifacts -ItemType directory
 }
 
-$codeCoverage = @(Get-ChildItem "$path\src" -Filter "*.ps1" -Recurse) | % { $_.FullName }
+$codeCoverage = $null
 
-Write-Host "testing code coverage of files:"
-$codeCoverage | % { Write-Host $_ }
-
-$a = @()
 if ($coverage) {
-    $a += @("-CodeCoverage", $codeCoverage)
+    $codeCoverage = @(Get-ChildItem "$path\src" -Filter "*.ps1" -Recurse) | % { $_.FullName }
+
+    Write-Host "testing code coverage of files:"
+    $codeCoverage | % { Write-Host $_ }
 }
 
 Write-Host "Importing Pester Module"
 
-ipmo Pester -Verbose:$true -ErrorAction Stop
+ipmo Pester -Verbose:$true -ErrorAction Stop -MinimumVersion 6.0.0
 $pester = Get-Module Pester
 $pester | Format-List | Out-Host
 
-Write-Host "running pester tests in $path\test"
+$config = New-PesterConfiguration
+$config.Run.Path = "$path\test"
+$config.Run.Exit = $EnableExit ? $true : $false
+$config.TestResult.Enabled = $true
+$config.TestResult.OutputPath = "$artifacts\test-result.xml"
+$config.TestResult.OutputFormat = $outputFormat
+$config.CodeCoverage.Enabled = $coverage ? $true : $false
+$config.CodeCoverage.Path = $codeCoverage
 
-$r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat:$outputFormat -EnableExit:$EnableExit @a
+$config | Format-List | Out-Host
+Write-Host "running pester tests in $path\test."
+
+Invoke-Pester -Configuration $config
 
 Write-Host "pester result = '$r' lastexitcode=$lastexitcode"
 
