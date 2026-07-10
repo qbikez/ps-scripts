@@ -2,8 +2,6 @@ param ($path = ".", [switch][bool]$EnableExit = $false, [switch][bool]$coverage,
 
 #$env:PSModulePath = [System.Environment]::GetEnvironmentVariable("PSModulePath", [System.EnvironmentVariableTarget]::User)
 
-Import-Module pester 
-
 $artifacts = "$path\artifacts"
 
 if (!(Test-Path $artifacts)) { $null = New-Item -type directory $artifacts }
@@ -24,9 +22,15 @@ if ($coverage) {
     $a += @("-CodeCoverage", $codeCoverage)
 }
 
+Write-Host "Pester Module:"
+
+
+$pester = Get-Module Pester
+$pester | Format-List | Out-Host
+
 Write-Host "running pester tests in $path\test"
 
-$r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat:$outputFormat -EnableExit:$EnableExit $a
+$r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat:$outputFormat -EnableExit:$EnableExit @a
 
 Write-Host "pester result = '$r' lastexitcode=$lastexitcode"
 
