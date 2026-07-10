@@ -1,7 +1,6 @@
 param ($path = ".")
 
-function ExitWithCode 
-{ 
+function ExitWithCode { 
     param 
     ( 
         $exitcode 
@@ -14,50 +13,51 @@ function ExitWithCode
 $artifacts = "$path\artifacts"
 
 try {
-    if (!(test-path $artifacts)) { $null = new-item -type directory $artifacts }
-    if (test-path "$artifacts\test-result.xml") {
-        remove-item "$artifacts\test-result.xml"
+    if (!(Test-Path $artifacts)) { $null = New-Item -type directory $artifacts }
+    if (Test-Path "$artifacts\test-result.xml") {
+        Remove-Item "$artifacts\test-result.xml"
     }
 
-write-host "running appveyor test script. artifacts dir = $((gi $artifacts).FullName)"
+    Write-Host "running appveyor test script. artifacts dir = $((gi $artifacts).FullName)"
 
-$testResultCode = & "$PSScriptRoot\test.ps1" (gi $path).FullName -EnableExit
+    $testResultCode = & "$PSScriptRoot\test.ps1" (gi $path).FullName -EnableExit
 
-if (!(test-path "$artifacts\test-result.xml")) {
-    throw "test results not found at $artifacts\test-result.xml!"
-}
+    if (!(Test-Path "$artifacts\test-result.xml")) {
+        throw "test results not found at $artifacts\test-result.xml!"
+    }
 
-if (!(test-path "$artifacts\test-result.xml")) {
+    if (!(Test-Path "$artifacts\test-result.xml")) {
         throw "test artifacts not found at '$artifacts\test-result.xml'!"
-}
+    }
     
-$resultpath = (get-item "$artifacts\test-result.xml").FullName
-$content = get-content "$artifacts\test-result.xml" | out-string
-if ([string]::isnullorwhitespace($content)) {
-    throw "$artifacts\test-result.xml is empty!"
-}
-else {
-    $content     
-}
+    $resultpath = (Get-Item "$artifacts\test-result.xml").FullName
+    $content = Get-Content "$artifacts\test-result.xml" | Out-String
+    if ([string]::isnullorwhitespace($content)) {
+        throw "$artifacts\test-result.xml is empty!"
+    }
+    else {
+        $content
+    }
 
-$url = "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)"
-#$url = https://ci.appveyor.com/api/testresults/nunit/bq558ckwevwb47qb
-# upload results to AppVeyor
-write-host "uploading test result from $resultpath to $url"
-$wc = New-Object 'System.Net.WebClient'
+    $url = "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)"
+    #$url = https://ci.appveyor.com/api/testresults/nunit/bq558ckwevwb47qb
+    # upload results to AppVeyor
+    Write-Host "uploading test result from $resultpath to $url"
+    $wc = New-Object 'System.Net.WebClient'
 
-try {
-    $r = $wc.UploadFile($url, $resultpath)
+    try {
+        $r = $wc.UploadFile($url, $resultpath)
     
-    write-host "upload done. result = $r"
-} 
-finally {
-    $wc.Dispose()
+        Write-Host "upload done. result = $r"
+    } 
+    finally {
+        $wc.Dispose()
+    }
+    Write-Host "pester result = '$testResultCode' lastexitcode=$lastexitcode"
+
+    #ExitWithCode $testResultCode
+
 }
-write-host "pester result = '$testResultCode' lastexitcode=$lastexitcode"
-
-#ExitWithCode $testResultCode
-
-} catch {
+catch {
     ExitWithCode 1  
 }

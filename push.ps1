@@ -172,13 +172,17 @@ if ($path.endsWith(".psd1")) {
     $modules = @($path) | % { Split-Path -Parent $_ }
 }
 else {
+    Write-Verbose "looking for *.psm1 modules in $((gi $path).fullname)"
+    $modules = @(Get-ChildItem "$path" -Filter "*.psd1" -Recurse | % { $_.Directory.FullName })
+
+
     if (Test-Path $path\src) {
         $path = "$path\src"
+        Write-Verbose "looking for *.psm1 modules in $((gi $path).fullname)"
+
+        $modules += @(Get-ChildItem "$path" -Filter "*.psd1" -Recurse | % { $_.Directory.FullName })
     }
 
-    Write-Verbose "looking for *.psm1 modules in $((gi $path).fullname)"
-
-    $modules = @(Get-ChildItem "$path" -Filter "*.psd1" -Recurse | % { $_.Directory.FullName })
 }
 
 Write-Verbose "found $($modules.length) modules: $modules"

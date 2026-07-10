@@ -2,27 +2,32 @@ param ($path = ".", [switch][bool]$EnableExit = $false, [switch][bool]$coverage,
 
 #$env:PSModulePath = [System.Environment]::GetEnvironmentVariable("PSModulePath", [System.EnvironmentVariableTarget]::User)
 
-import-module pester 
+Import-Module pester 
 
 $artifacts = "$path\artifacts"
 
-if (!(test-path $artifacts)) { $null = new-item -type directory $artifacts }
+if (!(Test-Path $artifacts)) { $null = New-Item -type directory $artifacts }
 
-write-host "running tests. artifacts dir = $((gi $artifacts).FullName)"
+Write-Host "running tests. artifacts dir = $((gi $artifacts).FullName)"
 
 if (!(Test-Path $artifacts)) {
-    $null = new-item $artifacts -ItemType directory
+    $null = New-Item $artifacts -ItemType directory
 }
 
 $codeCoverage = @(Get-ChildItem "$path\src" -Filter "*.ps1" -Recurse) | % { $_.FullName }
 
 Write-Host "testing code coverage of files:"
-$codeCoverage | % { write-host $_ }
+$codeCoverage | % { Write-Host $_ }
 
 $a = @()
 if ($coverage) {
-    $a += @("-CodeCoverage",$codeCoverage)
+    $a += @("-CodeCoverage", $codeCoverage)
 }
+
+Write-Host "running pester tests in $path\test"
+
 $r = Invoke-Pester "$path\test" -OutputFile "$artifacts\test-result.xml" -OutputFormat:$outputFormat -EnableExit:$EnableExit $a
+
+Write-Host "pester result = '$r' lastexitcode=$lastexitcode"
 
 return $r
