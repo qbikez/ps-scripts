@@ -22,9 +22,9 @@ if ($coverage) {
     $a += @("-CodeCoverage", $codeCoverage)
 }
 
-Write-Host "Pester Module:"
+Write-Host "Importing Pester Module"
 
-
+ipmo Pester -Verbose:$true -ErrorAction Stop
 $pester = Get-Module Pester
 $pester | Format-List | Out-Host
 
