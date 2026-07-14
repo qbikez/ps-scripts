@@ -123,7 +123,6 @@ function push-module {
 
         $newver, $buildno = update-buildno $modulepath -newbuild:$newbuild -newversion:$newversion -version:$version -buildno:$buildno
 
-
         Import-Module PowerShellGet -Verbose:$false
         Import-Module PackageManagement -Verbose:$false
 
